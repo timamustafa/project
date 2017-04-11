@@ -1,0 +1,22 @@
+language: java
+jdk:
+- oraclejdk7
+before_script:
+- cd software
+- mv -f config/travis/gradle.properties gradle.properties
+before_install:
+- openssl aes-256-cbc -K $encrypted_7f802f49f92a_key -iv $encrypted_7f802f49f92a_iv
+  -in .scripts/deploy-key.enc -out deploy-key -d
+- mysql -e "CREATE DATABASE IF NOT EXISTS Flatfinder; SET SQL_SAFE_UPDATES = 0;" -uroot
+- bash .scripts/install.sh
+script:
+- ./gradlew clean cleanCheck
+- ./gradlew check
+- ./gradlew cucumber
+services:
+- mysql
+addons:
+- ssh_known_hosts: 178.62.109.195
+after_success:
+- cd ..
+- if [ "$TRAVIS_BRANCH" = "master" ]; then bash .scripts/deploy.sh; fi
